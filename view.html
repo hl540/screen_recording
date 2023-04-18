@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>window</title>
+    <script src="https://cdn.staticfile.org/pako/1.0.10/pako.min.js"></script>
+    <script>
+        function unzip(b64Data) {
+            return b64Data;
+            let strData = atob(b64Data);
+            const charData = strData.split('').map(function (x) {
+                return x.charCodeAt(0);
+            });
+            const binData = new Uint8Array(charData);
+            const data = pako.inflate(binData);
+
+            // 分块解析
+            // let chunk = 16 * 1024;
+            // let i = 0
+            // for (i = 0; i < data.length / chunk; i++) {
+            //     strData += String.fromCharCode.apply(null, data.slice(i * chunk, (i + 1) * chunk));
+            // }
+            // strData += String.fromCharCode.apply(null, data.slice(i * chunk));
+            strData = String.fromCharCode.apply(null, new Uint16Array(data));
+            return unescape(strData)
+        }
+    </script>
+</head>
+<body>
+    <div style="display: flex;flex-direction: column;">
+        <img src="" alt="" id="snapshot" style="width: 100%;height: 100;">
+    </div>
+    <script>
+        var source = new EventSource("/stream");
+        source.onmessage = function (event) {
+            let src = "data:image/png;base64, " + unzip(event.data);
+            document.getElementById("snapshot").setAttribute("src", src);
+        };
+      
+        source.addEventListener('open', function (event) {
+            console.log("push 服务已连接");
+        }, false);
+
+        source.addEventListener('close', function (event) {
+            source.close();
+            console.log("push 服务已断开");
+        }, false);
+        
+        source.addEventListener('error', function (event) {
+            if (event.readyState == EventSource.CLOSED) {
+                console.log("连接关闭");
+            } else {
+                console.log(event);
+            }
+        }, false);
+    </script>
+</body>
+</html>

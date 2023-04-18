@@ -1,0 +1,6 @@
+Name: 录屏快照
+Frequency: 1
+Compression: 10
+ReportChannel: 1
+ReportAddress: http://127.0.0.1:9999/report
+ReportKey: 123456789
