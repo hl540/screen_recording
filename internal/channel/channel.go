@@ -3,7 +3,6 @@ package channel
 import (
 	"context"
 	"errors"
-	"log"
 )
 
 type Channel struct {
@@ -22,7 +21,6 @@ func (c *Channel) Start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case data := <-c.Publisher:
-			log.Println(len(data))
 			if c.Subscriber != nil && c.Subscriber.Channel != nil {
 				c.Subscriber.Channel <- data
 			}

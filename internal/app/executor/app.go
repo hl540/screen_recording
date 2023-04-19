@@ -115,10 +115,12 @@ func (a *App) snapshot() []byte {
 
 // 上报快照信息
 func (a *App) report(data []byte) error {
+	// gzip压缩
 	data, err := util.Gzip(data)
 	if err != nil {
 		return err
 	}
+	// 上报请求
 	api := fmt.Sprintf("%s?channel=%s&key=%s", a.ReportAddress, a.ReportChannel, a.ReportKey)
 	rsp, err := http.Post(api, "application/x-www-form-urlencoded", bytes.NewReader(data))
 	if err != nil {

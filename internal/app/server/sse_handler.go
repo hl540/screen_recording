@@ -22,7 +22,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	// 绑定
 	client, err := c.BindSubscriber(&channel.Client{
 		Name: util.RemoteIp(r),
-		Channel: make(chan string),
+		Channel: make(chan string, 100),
 	})
 	if err != nil {
 		w.Write([]byte(err.Error()))

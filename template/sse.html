@@ -44,23 +44,18 @@
     <script src="https://cdn.staticfile.org/pako/1.0.10/pako.min.js"></script>
     <script>
         function unzip(b64Data) {
-            return b64Data;
             let strData = atob(b64Data);
             const charData = strData.split('').map(function (x) {
                 return x.charCodeAt(0);
             });
             const binData = new Uint8Array(charData);
             const data = pako.inflate(binData);
-
-            // 分块解析
-            // let chunk = 16 * 1024;
-            // let i = 0
-            // for (i = 0; i < data.length / chunk; i++) {
-            //     strData += String.fromCharCode.apply(null, data.slice(i * chunk, (i + 1) * chunk));
-            // }
-            // strData += String.fromCharCode.apply(null, data.slice(i * chunk));
-            strData = String.fromCharCode.apply(null, new Uint16Array(data));
-            return unescape(strData)
+            return new Uint16Array(data).reduce(
+                function (data, byte) {
+                    return data + String.fromCharCode(byte);
+                },
+                ''
+            )
         }
         function getQueryString(name) {
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
