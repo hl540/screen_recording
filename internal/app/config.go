@@ -1,6 +1,8 @@
 package app
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -13,8 +15,6 @@ func init() {
 	GlobalConfig.SetConfigFile(defaultConfigPath + "conf.yaml")
 	err := GlobalConfig.ReadInConfig()
 	if err != nil {
-		panic(err)
+		log.Printf("配置解析失败,err:%s", err.Error())
 	}
 }
-
-type Config struct{}

@@ -2,29 +2,26 @@ package server
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"screen_recording/internal/util"
+	"screen_recording/internal/channel"
 )
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
 	// log.Println(r.URL.Query().Get("key"))
-	// log.Println(r.URL.Query().Get("channel"))
+	channelName := r.URL.Query().Get("channel")
+	c := channel.Get(channelName)
+	if c == nil {
+		w.Write([]byte("频道不存在"))
+		log.Printf("频道不存在 [%s]", channelName)
+		return
+	}
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.Write([]byte(err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("上报内容解析失败,err:%s", err.Error())
 		return
 	}
-	log.Println(len(data))
-	// 解压
-	data, err = util.Ugzip(data)
-	log.Println(err)
-
-	// 保存图片
-	// dec := base64.NewDecoder(base64.StdEncoding, bytes.NewReader(data))
-	// bs, _ := io.ReadAll(dec)
-	// log.Println(len(data))
-	ioutil.WriteFile("./output.jpeg", data, 0777)
+	c.Publisher <- string(data)
+	w.Write([]byte("success"))
 }
