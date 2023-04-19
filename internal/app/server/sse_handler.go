@@ -46,4 +46,5 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 		// 刷新到响应
 		w.(http.Flusher).Flush()
 	}
+	c.Subscriber = nil
 }
