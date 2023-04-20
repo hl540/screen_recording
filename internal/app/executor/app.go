@@ -47,18 +47,11 @@ type App struct {
 // Init 初始化App
 func (a *App) Init() error {
 	a.Name = "屏幕快照"
-	// 配置文件参数
-	a.Frequency = app.GlobalConfig.GetUint("frequency")
-	a.Compression = app.GlobalConfig.GetUint("compression")
-	a.ReportChannel = app.GlobalConfig.GetString("ReportChannel")
-	a.ReportAddress = app.GlobalConfig.GetString("ReportAddress")
-	a.ReportKey = app.GlobalConfig.GetString("ReportKey")
-
 	// 命令行参数覆盖
-	flag.UintVar(&a.Frequency, "f", 1, "快照频率,单位秒")
+	flag.UintVar(&a.Frequency, "f", 0, "快照频率,单位秒")
 	flag.UintVar(&a.Compression, "c", 100, "快照压缩比例(1-100)")
-	flag.StringVar(&a.ReportChannel, "channel", "", "上报频道")
-	flag.StringVar(&a.ReportAddress, "addr", "http://127.0.0.1:9999/report", "上报地址")
+	flag.StringVar(&a.ReportChannel, "channel", "channel_1", "上报频道")
+	flag.StringVar(&a.ReportAddress, "addr", "129.211.212.5:9999", "上报地址")
 	flag.StringVar(&a.ReportKey, "key", "", "上报秘钥")
 	flag.Parse()
 	return nil
@@ -121,7 +114,7 @@ func (a *App) report(data []byte) error {
 		return err
 	}
 	// 上报请求
-	api := fmt.Sprintf("%s?channel=%s&key=%s", a.ReportAddress, a.ReportChannel, a.ReportKey)
+	api := fmt.Sprintf("http://%s/report?channel=%s&key=%s", a.ReportAddress, a.ReportChannel, a.ReportKey)
 	rsp, err := http.Post(api, "application/x-www-form-urlencoded", bytes.NewReader(data))
 	if err != nil {
 		return err

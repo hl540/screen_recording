@@ -7,7 +7,8 @@ import (
 
 	"screen_recording/internal/app"
 	"screen_recording/internal/channel"
-	"screen_recording/internal/util"
+
+	"github.com/spf13/viper"
 )
 
 func init() {
@@ -15,15 +16,20 @@ func init() {
 }
 
 type App struct {
-	Name    string
-	Address string
-	ChannelNum int
+	Name     string
+	Address  string
+	Channels []string
 }
 
 func (a *App) Init() error {
-	a.Name = app.GlobalConfig.GetString("name")
-	a.Address = app.GlobalConfig.GetString("address")
-	a.ChannelNum = app.GlobalConfig.GetInt("ChannelNum")
+	viper.SetConfigFile("./conf.yaml")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(err)
+	}
+	a.Name = viper.GetString("name")
+	a.Address = viper.GetString("address")
+	a.Channels = viper.GetStringSlice("Channels")
 	return nil
 }
 
@@ -38,7 +44,7 @@ func (a *App) Start(ctx context.Context) {
 	mux.HandleFunc("/", viewHandler)
 	mux.HandleFunc("/report", reportHandler)
 	mux.HandleFunc("/sse", sseHandler)
-	
+
 	// 启动服务
 	server := &http.Server{
 		Addr:    a.Address,
@@ -52,12 +58,11 @@ func (a *App) End() {
 }
 
 // 初始化频道
-func(a *App) initChannel(ctx context.Context){
-	for i := 0; i < a.ChannelNum; i++ {
+func (a *App) initChannel(ctx context.Context) {
+	for _, name := range a.Channels {
 		chann := &channel.Channel{
 			Publisher: make(chan string),
 		}
-		name := util.RandStr(10)
 		channel.Set(name, chann)
 		go chann.Start(ctx)
 		log.Printf("频道ID:%s", name)

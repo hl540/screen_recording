@@ -1,3 +1,6 @@
 Name: 上报服务
 Address: 0.0.0.0:9999
-ChannelNum: 1
+Channels:
+  - channel_1
+  - channel_2
+  - channel_3
