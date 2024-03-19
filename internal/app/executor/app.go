@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+
 	"screen_recording/internal/app"
 	"screen_recording/internal/util"
 
@@ -29,8 +30,9 @@ ____) | ( __| | |  __/  __/ | | \__ \ | | | (_) | |_
 `
 
 var logger = &log.Logger{}
+
 func init() {
-	logf, _ := os.Open("./log.log")
+	logf, _ := os.Create("./log.log")
 	logger.SetOutput(logf)
 	app.Set("executor", &App{})
 }
@@ -51,7 +53,7 @@ func (a *App) Init() error {
 	flag.UintVar(&a.Frequency, "f", 0, "快照频率,单位秒")
 	flag.UintVar(&a.Compression, "c", 100, "快照压缩比例(1-100)")
 	flag.StringVar(&a.ReportChannel, "channel", "channel_1", "上报频道")
-	flag.StringVar(&a.ReportAddress, "addr", "129.211.212.5:9999", "上报地址")
+	flag.StringVar(&a.ReportAddress, "addr", "127.0.0.1:9999", "上报地址")
 	flag.StringVar(&a.ReportKey, "key", "", "上报秘钥")
 	flag.Parse()
 	return nil
@@ -61,7 +63,7 @@ func (a *App) Init() error {
 func (a *App) Start(ctx context.Context) {
 	logger.Printf("app [%s] Start", a.Name)
 	fmt.Println(flagText)
-	fmt.Println("上报频道："+ a.ReportChannel)
+	fmt.Println("上报频道：" + a.ReportChannel)
 	for {
 		select {
 		case <-ctx.Done():
