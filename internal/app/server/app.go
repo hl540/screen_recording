@@ -62,7 +62,7 @@ func (a *App) End() {
 func (a *App) initChannel(ctx context.Context) {
 	for _, name := range a.Channels {
 		chann := &channel.Channel{
-			Publisher: make(chan string),
+			Publisher: make(chan string, 100),
 		}
 		channel.Set(name, chann)
 		go chann.Start(ctx)
