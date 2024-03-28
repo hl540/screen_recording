@@ -40,6 +40,24 @@
             transform: translate3d(-50%, -50%, 0);
             -webkit-transform: translate3d(-50%, -50%, 0);
         }
+
+        .ctl {
+            text-align: center;
+            padding-top: 10%;
+        }
+
+        select, button {
+            width: 20%;
+            height: 40px;
+            font-size: 20px;
+        }
+
+        .imgScale button {
+            width: 100px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        }
     </style>
     <script src="https://cdn.staticfile.org/pako/1.0.10/pako.min.js"></script>
     <script>
@@ -57,33 +75,58 @@
                 ''
             )
         }
+
         function getQueryString(name) {
             var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
             var r = window.location.search.substr(1).match(reg);
-            if (r != null) return unescape(r[2]); return null;
+            if (r != null) return unescape(r[2]);
+            return null;
         }
     </script>
 </head>
 
 <body>
-    <div class="imgScale">
-        <img src="" alt="" id="snapshot">
-    </div>
-    <script>
-        var source = new EventSource("/sse?channel=" + getQueryString("channel"));
-        source.onmessage = function (event) {
-            let src = "data:image/png;base64, " + unzip(event.data);
-            document.getElementById("snapshot").setAttribute("src", src);
-        };
+<div class="ctl">
+    <h4>选择频道开始监听</h4>
+    <br>
+    <select name="channel">
+        <option value="channel_1">channel_1</option>
+        <option value="channel_2">channel_1</option>
+        <option value="channel_3">channel_1</option>
+    </select>
+    <br>
+    <br>
+    <button id="start">开始监听</button>
+</div>
+<div class="imgScale" style="display: none;">
+    <img src="" alt="" id="snapshot">
+    <button id="close">停止监听</button>
+</div>
+<script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script>
+    var source = null;
 
-        source.addEventListener('open', function (event) {
-            console.log("push 服务已连接");
-        }, false);
+    function onmessage(event) {
+        let src = "data:image/png;base64, " + (event.data);
+        document.getElementById("snapshot").setAttribute("src", src);
+    }
 
-        source.addEventListener('close', function (event) {
-            source.close();
-            console.log("push 服务已断开");
-        }, false);
+    function onopen(event) {
+        console.log("push 服务已连接");
+    }
+
+    function onclose(event) {
+        console.log("push 服务已断开");
+
+    }
+
+    $("#start").click(function (event) {
+        source = new EventSource("/sse?channel=" + $("[name=channel]").val());
+        source.onmessage = onmessage;
+
+        source.addEventListener('open', onopen);
+
+        source.addEventListener('close', onclose);
 
         source.addEventListener('error', function (event) {
             if (event.readyState == EventSource.CLOSED) {
@@ -91,8 +134,19 @@
             } else {
                 console.log(event);
             }
-        }, false);
-    </script>
+        });
+
+        $(".ctl").hide();
+        $(".imgScale").show();
+    });
+    $("#close").click(function (event) {
+        if (source) {
+            source.close();
+        }
+        $(".ctl").show();
+        $(".imgScale").hide();
+    });
+</script>
 </body>
 
 </html>

@@ -2,9 +2,10 @@ package server
 
 import (
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+
 	"screen_recording/internal/channel"
 )
 
@@ -16,7 +17,7 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("频道不存在 [%s]", channelName)
 		return
 	}
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		log.Printf("上报内容解析失败,err:%s", err.Error())

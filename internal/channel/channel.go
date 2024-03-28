@@ -51,3 +51,11 @@ func Get(name string) *Channel {
 	}
 	return nil
 }
+
+func GetAllName() []string {
+	names := make([]string, 0)
+	for name := range channelMap {
+		names = append(names, name)
+	}
+	return names
+}

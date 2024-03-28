@@ -43,6 +43,7 @@ func (a *App) Start(ctx context.Context) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", viewHandler)
 	mux.HandleFunc("/report", reportHandler)
+	mux.HandleFunc("/channel/all", getChannelHandler)
 	mux.HandleFunc("/sse", sseHandler)
 
 	// 启动服务
