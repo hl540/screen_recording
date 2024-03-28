@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 	"image/jpeg"
-	"io"
 	"log"
+	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/spf13/cast"
 	"screen_recording/internal/app"
-	"screen_recording/internal/call"
 )
 
 var logger = &log.Logger{}
@@ -57,9 +57,6 @@ func NewApp(title string, w, h float32) app.App {
 func (a *App) Init() error {
 	a.app = fyneapp.New()
 	a.mainWindow = a.app.NewWindow(a.title)
-
-	a.mainWindow.Resize(fyne.NewSize(a.w, a.h))
-	a.mainWindow.SetFixedSize(true)
 	return nil
 }
 
@@ -138,6 +135,8 @@ func (a *App) Start(ctx context.Context) {
 		stopReportBut,
 	)
 	a.mainWindow.SetContent(content)
+	a.mainWindow.SetFixedSize(true)
+	a.mainWindow.Resize(fyne.NewSize(a.w, a.h))
 	a.mainWindow.ShowAndRun()
 }
 
@@ -148,49 +147,53 @@ func (a *App) updateTime(clock *widget.Label) {
 	clock.SetText(formatted)
 }
 
-func (a *App) getChannels() []string {
-	names, err := call.GetChannel("127.0.0.1")
-	if err != nil {
-		logger.Fatalln(err)
-	}
-	return names
-}
-
 func (a *App) startReport(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-
 			time.Sleep(time.Duration(cast.ToFloat64(a.frequency) * float64(time.Second)))
-			data, err := a.snapshot()
-			if err != nil {
-				logger.Printf("快照获取失败，err:%s", err.Error())
-				continue
-			}
-			err = call.Report(data, a.serverAdd, a.channel)
-			if err != nil {
-				logger.Printf("快照获取失败，err:%s", err.Error())
-				continue
-			}
+			a.reportSnapshot()
 		}
 	}
 }
 
-func (a *App) snapshot() (io.Reader, error) {
+func (a *App) reportSnapshot() error {
 	// 获取第一个屏幕
 	bounds := screenshot.GetDisplayBounds(0)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
-		return nil, err
+		logger.Printf("获取快照失败,err:%s", err.Error())
+		return err
+	}
+	// 文件名
+	fileName := fmt.Sprintf("window_%dx%d.jpeg", bounds.Dx(), bounds.Dy())
+
+	// 创建multipart
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	contentType := writer.FormDataContentType()
+	filePart, err := writer.CreateFormFile("image", fileName)
+	if err != nil {
+		logger.Printf("获取快照失败,err:%s", err.Error())
+		return err
 	}
 
-	buf := &bytes.Buffer{}
-	// 压缩比例
-	err = jpeg.Encode(buf, img, &jpeg.Options{Quality: int(a.quality)})
+	// 压缩比例100
+	err = jpeg.Encode(filePart, img, &jpeg.Options{Quality: int(a.quality)})
 	if err != nil {
-		return nil, err
+		logger.Printf("获取快照失败,err:%s", err.Error())
+		return err
 	}
-	return buf, nil
+	writer.Close()
+	// 上报请求
+	api := fmt.Sprintf("http://%s/report?channel=%s", a.serverAdd, a.channel)
+	response, err := http.Post(api, contentType, body)
+	if err != nil {
+		logger.Printf("上报快照失败,err:%s", err.Error())
+		return err
+	}
+	defer response.Body.Close()
+	return nil
 }
