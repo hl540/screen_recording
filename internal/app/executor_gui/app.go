@@ -67,7 +67,7 @@ func (a *App) Start(ctx context.Context) {
 	logger.Println("app [屏幕快照] Start")
 	// 服务器地址输入区域
 	serverAddrEl := widget.NewEntry()
-	serverAddrEl.SetText("127.0.0.1:9999")
+	serverAddrEl.SetText("119.45.254.165:9999")
 	serverAddrArea := container.NewVBox(widget.NewLabel("服务器地址"), serverAddrEl)
 
 	// 上报频道选择区域
